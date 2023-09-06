@@ -14,6 +14,7 @@ SELECT Location, date, total_cases, new_cases, total_deaths, population
 FROM CovidProject..CovidDeaths
 order by 1, 2
 
+-- 1.
 -- Looking at Total Cases vs Total Deaths
 -- Shows likelihood of dying if you contract covid
 SELECT Location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as DeathPercentage 
@@ -22,20 +23,23 @@ where location like '%states%'
 order by 1, 2
 
 
--- Looking at Total Cases vs Population
+-- 2.
+-- Looking at countries with highest infection rate compared to population by date
 -- Shows what percentage of population got covid
-SELECT Location, date, total_cases, population, (total_cases/population)*100 as PercentPopulationInfected 
+SELECT Location, population, date, MAX(total_cases) AS HighestInfectionCount, MAX((total_cases/population))*100 as PercentPopulationInfected 
 FROM CovidProject..CovidDeaths
-where location like '%states%'
-order by 1, 2
+--where location like '%states%'
+GROUP BY Location, population, date
+ORDER BY PercentPopulationInfected DESC
 
+-- 3.
 -- Looking at countries with highest infection rate compared to population
-SELECT Location, MAX(total_cases) as HighestInfectionCount, population, MAX((total_cases/population))*100 as PercentPopulationInfected 
+SELECT Location, MAX(total_cases) AS HighestInfectionCount, population, MAX((total_cases/population))*100 AS PercentPopulationInfected 
 FROM CovidProject..CovidDeaths
 GROUP BY location, population
-order by PercentPopulationInfected desc
+ORDER BY PercentPopulationInfected DESC
 
-
+-- 4.
 --Showing countries with highest death count per population
 SELECT Location, MAX(total_deaths) as TotalDeathCount 
 FROM CovidProject..CovidDeaths
@@ -43,23 +47,25 @@ where continent is not null
 GROUP BY location
 order by TotalDeathCount desc
 
-
--- Showing continents with highest death count
-SELECT continent, MAX(total_deaths) as TotalDeathCount 
+-- 5.
+-- Showing total death count for each continent
+SELECT location, SUM(total_deaths) AS TotalDeathCount 
 FROM CovidProject..CovidDeaths
-where continent is not null
-GROUP BY continent
-order by TotalDeathCount desc
+WHERE continent is null
+AND location not in ('World', 'European Union', 'International')
+GROUP BY location
+ORDER BY TotalDeathCount desc
 
 
 -- Global numbers
-
+-- 6. 
+-- Shows global death percentage for each date
 SELECT date, SUM(new_cases) as total_cases, SUM(new_deaths) as total_deaths, (SUM(new_deaths)/SUM(new_cases))*100 as DeathPercentage 
 FROM CovidProject..CovidDeaths
 where continent is not null
 group by date
 order by 1, 2
-
+-- Shows total death percentage
 SELECT SUM(new_cases) as total_cases, SUM(new_deaths) as total_deaths, (SUM(new_deaths)/SUM(new_cases))*100 as DeathPercentage 
 FROM CovidProject..CovidDeaths
 where continent is not null
@@ -76,6 +82,8 @@ order by 1, 2
 --WHERE dea.continent IS NOT NULL
 --ORDER BY 1,2,3
 
+-- 7.
+-- Looking at total population vs vaccinations
 -- USE CTE
 With PopVsVac (continent, location, date, population, new_vaccinations, rolling_people_vaccinated)
 AS
